@@ -54,6 +54,14 @@ def anonymize_sales_data(df, pii_columns):
     return df
 
 
+def clean_prices(price_cols):
+    # cleans price columns by removing currency symbols and converting to float
+    df = df.copy()
+    for col in price_cols:
+        if col in df.columns:
+            df[col] = df[col].replace('[\$,]', '', regex=True).astype(float)
+    return df
+
 
 
 def hash_pii_columns(df, pii_columns):
