@@ -24,8 +24,14 @@ SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 def select_sales_file_path():
     # tkinter file dialog to choose a file
     print("Opening file dialog...")
-    Tk().withdraw()
-    file_path = askopenfilename(filetypes=[("CSV files", "*.csv")])
+    root= Tk()
+    root.title("Select Sales Data CSV File")
+    root.lift()
+    root.attributes("-topmost", True)
+    root.after(1000, lambda: root.attributes("-topmost", False))
+    root.withdraw()
+    file_path = askopenfilename(parent=root, filetypes=[("CSV files", "*.csv")])
+    root.destroy()
     if not file_path:
         raise FileNotFoundError("No file selected.")
     return file_path
@@ -54,12 +60,16 @@ def anonymize_sales_data(df, pii_columns):
     return df
 
 
-def clean_prices(price_cols):
+def clean_prices(df, price_cols):
     # cleans price columns by removing currency symbols and converting to float
     df = df.copy()
     for col in price_cols:
         if col in df.columns:
-            df[col] = df[col].replace('[\$,]', '', regex=True).astype(float)
+            df[col] = df[col].astype(str).str.strip().replace(r'[\$,\-=]', '', regex=True)
+            df[col] = df[col].replace(r'^\s*$', '0', regex=True) # whitespace to 0
+            df[col] = df[col].replace(r'^""$', '0', regex=True)  
+            df[col] = df[col].astype(float)
+
     return df
 
 
@@ -94,13 +104,21 @@ def upload_to_google_sheet(df, sheet_id=SPREADSHEET_ID, creds_file=CRED_FILE):
 
 
 def run_anonymization():
-    """Anonymizes the sales DataFrame by removing or hashing PII columns. Returns the anonymized DataFrame."""
+    """Anonymizes the cleaned sales DataFrame by removing or hashing PII columns. Returns the anonymized DataFrame."""
+
+    pii_columns_to_remove = ["Name", "Address Line 1", "Address Line 2", "City", "Post Code", "Buyer"]
+
+    price_cols=["Item price", "Buyer shipping cost", "Total", "USPS Cost", "Depop fee", "Depop Payments fee", 
+                "Buyer Marketplace Fee", "Boosting fee", "US Sales tax", "Refunded to buyer amount", "Fees refunded to seller"]
+
+
+
     file_path = select_sales_file_path()
     df = get_sales_df_from_path(file_path)
-    df = clean_df(df)
-
     df = df.copy()
-    pii_columns_to_remove = ["Name", "Address Line 1", "Address Line 2", "City", "Post Code", "Buyer"]
+    df = clean_df(df)
+    df = clean_prices(df, price_cols)
+    
     if pii_columns_to_remove:
         df = anonymize_sales_data(df, pii_columns_to_remove)
 
