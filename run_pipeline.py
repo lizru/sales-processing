@@ -1,18 +1,22 @@
-"""
-Runs the full data processing pipeline: anonymization, feature addition, and saving the final dataset.
-Uses anonymize.py and add_sales_features.py modules.
-"""
+# Runs the full data processing pipeline of anonymization, feature addition, and saving the final dataset.
 
 import anonymize
 import add_sales_features
-
+import file_utils
+import data_cleaning
 
 def main():
-    sales_df = anonymize.run_anonymization()
-    print('1')
-    sales_df = add_sales_features.add_all_sales_features(sales_df)
-    print('2')
-    anonymize.upload_to_google_sheet(sales_df)
 
+    
+    df = file_utils.select_sales_file_path()
+    df = data_cleaning.clean_df(df)
+    df = anonymize.run_anonymization(df)
+    df = add_sales_features.add_all_sales_features(df)
+    file_utils.export_choice_dialog(df)
+
+    
 if __name__ == "__main__":
     main()
+
+
+    
