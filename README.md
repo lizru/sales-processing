@@ -8,7 +8,7 @@ Uses environment variables and a Google Service account for Google Sheets authen
 - add_sales_features.py
     - Adds a field for days listed on platform
     - Flags sales surges
-        - UUses a rolling 7-day baseline, flagging days with >100% increases & accounting for periods with no prior sales.
+        - Uses a rolling 7-day baseline, flagging days with >100% increases & accounting for periods with no prior sales.
     - Description sentiment: 
         - Adds detected sentiment class and confidence in positive sentiment.
         - Sentiment may or may not be in descriptions; depends on style of seller data.
